@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Property Finder - Latest Listings{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="display-5">Latest Property Listings</h1>
+        <p class="lead">Found {{ listings|length }} properties matching your criteria</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+                <form id="filter-form" method="GET" action="{{ url_for('index') }}">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="min-price" class="form-label">Min Price</label>
+                            <input type="number" class="form-control" id="min-price" name="min_price" placeholder="Min Price">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="max-price" class="form-label">Max Price</label>
+                            <input type="number" class="form-control" id="max-price" name="max_price" placeholder="Max Price">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="min-beds" class="form-label">Min Bedrooms</label>
+                            <input type="number" class="form-control" id="min-beds" name="min_beds" placeholder="Min Bedrooms">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="max-beds" class="form-label">Max Bedrooms</label>
+                            <input type="number" class="form-control" id="max-beds" name="max_beds" placeholder="Max Bedrooms">
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if listings %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for listing in listings %}
+    <div class="col">
+        <div class="card h-100 shadow property-card">
+            <div class="position-relative">
+                {% if listing.images and listing.images|length > 0 %}
+                <img src="{{ listing.images[0] }}" class="card-img-top" alt="{{ listing.title }}">
+                {% else %}
+                <div class="card-img-top placeholder-img">
+                    <i class="fas fa-home fa-5x"></i>
+                </div>
+                {% endif %}
+                <div class="position-absolute top-0 end-0 p-2">
+                    {% if listing.is_favorite %}
+                    <form action="{{ url_for('remove_favorite') }}" method="post">
+                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('add_favorite') }}" method="post">
+                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                        <input type="hidden" name="title" value="{{ listing.title }}">
+                        <input type="hidden" name="price" value="{{ listing.price_text }}">
+                        <input type="hidden" name="address" value="{{ listing.address }}">
+                        <input type="hidden" name="link" value="{{ listing.link }}">
+                        <input type="hidden" name="bedrooms" value="{{ listing.bedrooms }}">
+                        {% for image in listing.images %}
+                        <input type="hidden" name="images" value="{{ image }}">
+                        {% endfor %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ listing.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">
+                    {{ listing.price_text }}
+                    <span class="badge bg-info ms-2">{{ listing.bedrooms }} bed</span>
+                </h6>
+                <p class="card-text">{{ listing.address }}</p>
+                <p class="card-text small">Source: {{ listing.source }}</p>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{{ listing.link }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt"></i> View Property
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">No properties found!</h4>
+    <p>No properties matching your criteria were found. Try adjusting your filters or running the scraper again.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize filter values from URL params
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.has('min_price')) {
+            document.getElementById('min-price').value = urlParams.get('min_price');
+        }
+        
+        if (urlParams.has('max_price')) {
+            document.getElementById('max-price').value = urlParams.get('max_price');
+        }
+        
+        if (urlParams.has('min_beds')) {
+            document.getElementById('min-beds').value = urlParams.get('min_beds');
+        }
+        
+        if (urlParams.has('max_beds')) {
+            document.getElementById('max-beds').value = urlParams.get('max_beds');
+        }
+    });
+</script>
+{% endblock %} 
